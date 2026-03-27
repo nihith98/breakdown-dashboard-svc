@@ -25,6 +25,13 @@ public class GroupViewRestController {
 
     }
 
+    @GetMapping("/{groupId}/settlement-list")
+    public ResponseStructure fetchSettlementList(@PathVariable String groupId) {
+        logger.info("Entered fetchSettlementList");
+        return groupViewService.getSettlements(groupId);
+
+    }
+
     @PostMapping("/{groupId}/insert-transaction")
     public ResponseStructure insertTransaction(@PathVariable String groupId, @Validated @RequestBody Transaction transaction) {
         logger.info("Entered insertTransaction");
