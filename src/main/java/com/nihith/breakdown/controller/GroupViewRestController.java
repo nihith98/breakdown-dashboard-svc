@@ -11,33 +11,34 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/group")
-public class GroupViewRestController {
+public class GroupViewRestController implements GroupViewApi {
 
     private static final Logger logger = LogManager.getLogger(GroupViewRestController.class);
 
     @Autowired
     private GroupViewService groupViewService;
 
+    @Override
     @GetMapping("/{groupId}/transaction-list")
     public ResponseStructure fetchTransactionList(@PathVariable String groupId) {
         logger.info("Entered fetchTransactionList");
         return groupViewService.getTransactions(groupId);
-
     }
 
+    @Override
     @GetMapping("/{groupId}/settlement-list")
     public ResponseStructure fetchSettlementList(@PathVariable String groupId) {
         logger.info("Entered fetchSettlementList");
         return groupViewService.getSettlements(groupId);
-
     }
 
+    @Override
     @PostMapping("/{groupId}/insert-transaction")
-    public ResponseStructure insertTransaction(@PathVariable String groupId, @Validated @RequestBody Transaction transaction) {
+    public ResponseStructure insertTransaction(@PathVariable String groupId,
+                                               @Validated @RequestBody Transaction transaction) {
         logger.info("Entered insertTransaction");
         transaction.setGroupId(groupId);
         return groupViewService.insertTransaction(transaction);
     }
-
 
 }
