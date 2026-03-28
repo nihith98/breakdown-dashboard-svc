@@ -116,6 +116,13 @@ public interface GroupViewApi {
 
     // ── Endpoint contracts ────────────────────────────────────────────────────
 
+    /**
+     * Retrieves all expense transactions recorded for the specified group.
+     *
+     * @param groupId the unique identifier of the expense group
+     * @return a {@link ResponseStructure} containing the transaction list on success,
+     *         or a failure response if retrieval fails
+     */
     @Operation(
             summary = "Get all expense transactions for a group",
             description = "Returns all **EXPENSE**-type transactions recorded in the specified group. " +
@@ -135,6 +142,15 @@ public interface GroupViewApi {
             @Parameter(description = "Unique identifier of the expense group", example = "trip2025", required = true)
             String groupId);
 
+    /**
+     * Retrieves the optimised settlement list for the specified group — the minimum set of
+     * transfers required to clear all outstanding balances. Supports the Family feature,
+     * where members of the same family appear as a single collective debtor.
+     *
+     * @param groupId the unique identifier of the expense group
+     * @return a {@link ResponseStructure} containing the settlement list on success,
+     *         or a failure response if retrieval fails
+     */
     @Operation(
             summary = "Get the current settlement list for a group",
             description = "Returns the optimised set of **SETTLEMENT** transactions that will bring all member " +
@@ -157,6 +173,17 @@ public interface GroupViewApi {
             @Parameter(description = "Unique identifier of the expense group", example = "trip2025", required = true)
             String groupId);
 
+    /**
+     * Inserts a new expense transaction for the specified group and triggers a recomputation
+     * of the settlement list. The response includes the updated expense list and the refreshed
+     * settlement list.
+     *
+     * @param groupId     the unique identifier of the expense group (taken from the URL path)
+     * @param transaction the expense details; {@code groupId} is injected from the path and
+     *                    must not be provided in the request body
+     * @return a {@link ResponseStructure} containing the updated transaction and settlement
+     *         lists on success, or a failure response if the insert fails
+     */
     @Operation(
             summary = "Add a new expense to a group",
             description = "Inserts a new **EXPENSE** transaction. On success the settlement list is recomputed " +

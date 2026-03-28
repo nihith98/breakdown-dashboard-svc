@@ -10,12 +10,22 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
+/**
+ * Spring configuration class that registers the OpenAPI / Swagger UI metadata bean
+ * for the Breakdown Dashboard service.
+ */
 @Configuration
 public class OpenApiConfig {
 
     @Value("${spring.application.name:breakdown-dashboard-svc}")
     private String applicationName;
 
+    /**
+     * Produces the {@link OpenAPI} bean that populates the Swagger UI with application
+     * title, version, description, contact information, and server details.
+     *
+     * @return a fully configured {@link OpenAPI} instance
+     */
     @Bean
     public OpenAPI breakdownOpenAPI() {
         return new OpenAPI()
