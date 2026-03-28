@@ -1,4 +1,4 @@
-package com.nihith.breakdown.controller;
+package com.nihith.breakdown.doc;
 
 import com.nihith.breakdown.model.response.ResponseStructure;
 import com.nihith.breakdown.model.transactions.Transaction;
