@@ -53,7 +53,10 @@ public class GroupAdminRestController implements GroupAdminApi {
 
     /**
      * {@inheritDoc}
-     * <p>Delegates to {@link GroupAdminService#manageFamilies(String, Group)} to process family operations.</p>
+     * <p>Delegates to {@link GroupAdminService#manageFamilies(String, Group)} to process family operations.
+     * Family definitions directly impact settlement computation — when families exist, the settlement engine
+     * operates at family level with aggregated member balances. Future settlements reflect the updated family
+     * structure; existing settlements are preserved.</p>
      */
     @Override
     @PostMapping("/{groupId}/manage-families")

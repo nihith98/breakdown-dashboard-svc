@@ -51,6 +51,7 @@ public interface GroupViewApi {
             "{\"data\":{\"groupId\":\"trip2025\",\"transactionList\":[],\"settlementList\":[" +
             "{\"uuid\":\"def-567\",\"transactionType\":\"SETTLEMENT\",\"paidById\":\"familyF\"," +
             "\"paidForList\":[{\"paidForId\":\"alice\",\"paidForValue\":4.0}]," +
+            "\"familyId\":\"familyF\"," +
             "\"groupId\":\"trip2025\",\"transactionStatus\":\"INCOMPLETE\"}]}," +
             "\"responseStatus\":\"SUCCESS\",\"messages\":[{\"messageType\":\"INFORMATION\"," +
             "\"message\":\"Settlement list fetched successfully\"}]}";
@@ -77,6 +78,7 @@ public interface GroupViewApi {
             "\"groupId\":\"trip2025\",\"transactionStatus\":\"INCOMPLETE\"}]," +
             "\"settlementList\":[{\"uuid\":\"def-567\",\"transactionType\":\"SETTLEMENT\"," +
             "\"paidById\":\"familyF\",\"paidForList\":[{\"paidForId\":\"alice\",\"paidForValue\":4.0}]," +
+            "\"familyId\":\"familyF\"," +
             "\"groupId\":\"trip2025\",\"transactionStatus\":\"INCOMPLETE\"}]}," +
             "\"responseStatus\":\"SUCCESS\",\"messages\":[{\"messageType\":\"INFORMATION\"," +
             "\"message\":\"Transaction inserted successfully\"}]}";
@@ -119,15 +121,22 @@ public interface GroupViewApi {
     /**
      * Retrieves all expense transactions recorded for the specified group.
      *
+     * <p>Returns a complete list of all EXPENSE-type transactions registered for the group,
+     * including transaction details (payer, split breakdown per participant, split type, status, etc.).
+     * The response payload ({@code data.transactionList}) contains the full list of transactions
+     * as an array.</p>
+     *
      * @param groupId the unique identifier of the expense group
-     * @return a {@link ResponseStructure} containing the transaction list on success,
-     *         or a failure response if retrieval fails
+     * @return a {@link ResponseStructure} containing the transaction list in {@code data.transactionList}
+     *         on success, or a failure response if retrieval fails
      */
     @Operation(
             summary = "Get all expense transactions for a group",
             description = "Returns all **EXPENSE**-type transactions recorded in the specified group. " +
                           "Each transaction includes who paid, the split breakdown per participant " +
-                          "(supporting EQUAL, SHARES, PERCENTAGE, and AMOUNT split types), and the current status."
+                          "(supporting EQUAL, SHARES, PERCENTAGE, and AMOUNT split types), and the current status.\n\n" +
+                          "**Response Payload:** The `data.transactionList` field contains the array of transactions. " +
+                          "Use this to display the expense history for the group."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Transaction list retrieved successfully",
@@ -145,7 +154,16 @@ public interface GroupViewApi {
     /**
      * Retrieves the optimised settlement list for the specified group — the minimum set of
      * transfers required to clear all outstanding balances. Supports the Family feature,
-     * where members of the same family appear as a single collective debtor.
+     * where members of the same family settle collectively at the family level.
+     *
+     * <p><b>Family-Level Settlements:</b> When a group contains families, settlement transactions
+     * are computed at the family level. Each settlement transaction includes a {@code familyId} field
+     * identifying which family owes whom, enabling users to distinguish family settlements from
+     * individual settlements at a glance.</p>
+     *
+     * <p><b>Mixed Groups:</b> Groups containing both families and individual members are fully supported.
+     * Individual members not part of any family are treated as single-member families for calculation
+     * consistency. Settlement transactions for such individuals will have {@code familyId} as null.</p>
      *
      * @param groupId the unique identifier of the expense group
      * @return a {@link ResponseStructure} containing the settlement list on success,
@@ -156,8 +174,11 @@ public interface GroupViewApi {
             description = "Returns the optimised set of **SETTLEMENT** transactions that will bring all member " +
                           "balances to zero using the minimum number of transfers. Automatically recomputed on " +
                           "each new expense insert.\n\n" +
-                          "**Family feature:** Members of a Family sub-group appear as a single debtor " +
-                          "(e.g. `familyF`) instead of generating separate records per member."
+                          "**Family-Level Settlements:** When families exist in the group, balances are aggregated " +
+                          "at the family level and settlements are computed between families. Each settlement includes " +
+                          "a `familyId` field indicating which family owes whom.\n\n" +
+                          "**Mixed Groups:** Groups can contain both families and individual members. Individual members " +
+                          "settle as single-member families; families settle collectively with `familyId` marked."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Settlement list retrieved successfully",
@@ -178,6 +199,21 @@ public interface GroupViewApi {
      * of the settlement list. The response includes the updated expense list and the refreshed
      * settlement list.
      *
+     * <p><b>Settlement Computation:</b> On successful insert, the settlement list is recomputed
+     * using the optimized two-pointer algorithm to find the minimum number of transfers needed
+     * to clear all outstanding balances. A critical bug fix in the settlement calculation ensures
+     * correct payer/receiver ID mapping under all balance comparison scenarios.</p>
+     *
+     * <p><b>Family-Level Settlements:</b> When the group contains families, the settlement engine
+     * automatically routes to family-level settlement computation. Each family member's individual
+     * balance is aggregated to the family level, and settlements are computed between families as
+     * collective entities. Settlement transactions include the {@code familyId} field to identify
+     * which family owns a debt.</p>
+     *
+     * <p><b>Mixed Groups:</b> Groups containing both families and individual members are fully supported.
+     * Individual members not in any family are treated as single-member families and settle individually,
+     * with {@code familyId} as null in their settlement records.</p>
+     *
      * @param groupId     the unique identifier of the expense group (taken from the URL path)
      * @param transaction the expense details; {@code groupId} is injected from the path and
      *                    must not be provided in the request body
@@ -190,9 +226,18 @@ public interface GroupViewApi {
                           "and persisted. The response includes both the updated expense list and the refreshed " +
                           "settlement list.\n\n" +
                           "`groupId` is taken from the path — do **not** include it in the request body.\n\n" +
+                          "**Settlement Algorithm:** Uses an optimized two-pointer algorithm on sorted member balances " +
+                          "to compute the minimum number of transfers. A critical bug fix ensures correct payer and receiver " +
+                          "identification in all balance comparison scenarios.\n\n" +
+                          "**Family-Level Settlements:** When families exist in the group, balances are aggregated to family level. " +
+                          "Each family member's balance is summed, and settlements are computed between families as single entities. " +
+                          "Settlement transactions are marked with `familyId` to identify the settling family.\n\n" +
+                          "**Mixed Group Support:** Groups can contain both families and individual members. Individuals not in families " +
+                          "settle independently; families settle collectively. Both settlement types coexist in the response.\n\n" +
                           "**Split types:** `EQUAL` · `SHARES` · `PERCENTAGE` · `AMOUNT`\n\n" +
                           "**Family feature:** Use a family ID as `paidForId` to record a family's collective " +
-                          "share — e.g. `familyF → alice: $4` instead of two individual records."
+                          "share — e.g. `familyF → alice: $4` instead of two individual records. The family will then settle the debt " +
+                          "collectively with all its members' balances aggregated."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Expense inserted; settlement list recomputed",

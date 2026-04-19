@@ -146,6 +146,12 @@ public interface GroupAdminApi {
      * Supports creating, updating, and deleting families simultaneously.
      * Validation failures return HTTP 400.
      *
+     * <p><b>Impact on Settlements:</b> Family definitions directly affect how the settlement engine
+     * computes outstanding balances. When families are added, updated, or removed, future settlement
+     * computations will reflect the new family structure. Existing (previously computed) settlements
+     * are not retroactively recalculated; only new expenses trigger settlement recomputation with the
+     * updated family definitions.</p>
+     *
      * @param groupId the unique identifier of the group to update
      * @param request a {@link Group} object whose {@code familyList} contains the operations to perform
      * @return a {@link ResponseStructure} indicating success or failure
@@ -156,6 +162,10 @@ public interface GroupAdminApi {
                           "- **No `familyId`** → create a new family (UUID auto-generated).\n" +
                           "- **`familyId` + `personIds` non-empty** → replace the family's member list.\n" +
                           "- **`familyId` + `personIds` empty/null** → delete the family.\n\n" +
+                          "**Settlement Impact:** Family definitions control settlement computation boundaries. " +
+                          "When families exist, settlements are computed at the family level with aggregated member balances. " +
+                          "When families are deleted or modified, future settlements reflect the new structure. " +
+                          "Existing settlements are preserved; only new expenses trigger recomputation.\n\n" +
                           "**Validation (HTTP 400):** every `personId` must be a group member " +
                           "and may only belong to one family at a time."
     )

@@ -39,7 +39,9 @@ public class GroupViewRestController implements GroupViewApi {
     /**
      * {@inheritDoc}
      * <p>Delegates to {@link GroupViewService#getSettlements(String)} to retrieve
-     * the computed settlement list for the specified group.</p>
+     * the computed settlement list for the specified group. When families exist in the group,
+     * settlements are computed at family level with aggregated balances and {@code familyId}
+     * marked on each settlement transaction.</p>
      */
     @Override
     @GetMapping("/{groupId}/settlement-list")
@@ -52,7 +54,9 @@ public class GroupViewRestController implements GroupViewApi {
      * {@inheritDoc}
      * <p>Sets the {@code groupId} on the transaction from the path variable, then delegates
      * to {@link GroupViewService#insertTransaction(Transaction)} to persist the new expense
-     * and recompute the settlement list.</p>
+     * and recompute the settlement list. When families exist in the group, the service routes
+     * to family-level settlement computation with aggregated family balances. A critical bug fix
+     * in the settlement calculation ensures correct payer and receiver identification.</p>
      */
     @Override
     @PostMapping("/{groupId}/insert-transaction")
