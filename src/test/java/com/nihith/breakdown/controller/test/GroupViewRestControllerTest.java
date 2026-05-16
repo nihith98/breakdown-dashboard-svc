@@ -162,6 +162,61 @@ public class GroupViewRestControllerTest {
         verify(groupViewService, times(1)).insertTransaction(any(Transaction.class));
     }
 
+    @Test
+    void fetchSettlementList_ValidGroupId_ReturnsSettlements() throws Exception {
+        // Arrange
+        String groupId = "testGroupId";
+        List<Transaction> settlements = new ArrayList<>();
+        Transaction settlement = new Transaction();
+        settlement.setTransactionDescription("settlement from alice to bob");
+        settlements.add(settlement);
+        ResponseStructure responseStructure = new ResponseStructure();
+        responseStructure.setStatus(ResponseStatus.SUCCESS);
+        List<String> infoMessages = new ArrayList<>();
+        infoMessages.add("Settlement list retrieved successfully");
+        ResponseMessages messages = new ResponseMessages();
+        messages.setInformationMessages(infoMessages);
+        responseStructure.setMessages(messages);
+        responseStructure.setPayload(settlements);
+        when(groupViewService.getSettlements(groupId)).thenReturn(responseStructure);
+
+        // Act & Assert
+        mockMvc.perform(get("/group/{groupId}/settlement-list", groupId))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.messages.informationMessages[0]").value("Settlement list retrieved successfully"))
+                .andExpect(jsonPath("$.payload").exists());
+
+        verify(groupViewService, times(1)).getSettlements(groupId);
+    }
+
+    @Test
+    void fetchSettlementList_NoSettlements_ReturnsEmptyList() throws Exception {
+        // Arrange
+        String groupId = "testGroupId";
+        List<Transaction> settlements = new ArrayList<>();
+        ResponseStructure responseStructure = new ResponseStructure();
+        responseStructure.setStatus(ResponseStatus.SUCCESS);
+        List<String> infoMessages = new ArrayList<>();
+        infoMessages.add("Settlement list retrieved successfully");
+        ResponseMessages messages = new ResponseMessages();
+        messages.setInformationMessages(infoMessages);
+        responseStructure.setMessages(messages);
+        responseStructure.setPayload(settlements);
+        when(groupViewService.getSettlements(groupId)).thenReturn(responseStructure);
+
+        // Act & Assert
+        mockMvc.perform(get("/group/{groupId}/settlement-list", groupId))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.messages.informationMessages[0]").value("Settlement list retrieved successfully"))
+                .andExpect(jsonPath("$.payload").isArray())
+                .andExpect(jsonPath("$.payload").isEmpty());
+
+        verify(groupViewService, times(1)).getSettlements(groupId);
+    }
+
+
 //    @Test
 //    void insertTransaction_NullTransaction_ReturnsError() throws Exception {
 //        // Arrange
