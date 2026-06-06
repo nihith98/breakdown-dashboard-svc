@@ -36,7 +36,7 @@ public interface GroupAdminApi {
             "\"messages\":[{\"messageType\":\"ERROR\",\"message\":\"Internal server error\"}]}";
 
     String EXAMPLE_CREATE_REQUEST =
-            "{\"groupName\":\"Trip 2025\",\"personList\":[\"alice\",\"bob\",\"carol\"],\"familyList\":[]}";
+            "{\"groupName\":\"Trip 2025\",\"groupDescription\":\"Summer vacation expenses\",\"personList\":[\"alice\",\"bob\",\"carol\"],\"familyList\":[]}";
 
     String EXAMPLE_ADD_MEMBERS_SUCCESS =
             "{\"data\":null,\"responseStatus\":\"SUCCESS\",\"messages\":[{\"messageType\":\"INFORMATION\"," +
@@ -78,14 +78,16 @@ public interface GroupAdminApi {
      * Creates a new expense group and persists it in the database.
      * A unique {@code groupId} is generated server-side; any {@code groupId} supplied
      * in the request body is ignored.
+     * The {@code groupDescription} field is optional and persisted but not returned in the response.
      *
      * @param request the group details to persist
      * @return a {@link ResponseStructure} indicating success or failure
      */
     @Operation(
             summary = "Create a new expense group",
-            description = "Persists a new group with the provided name, member list, and optional family definitions. " +
-                          "The `groupId` is auto-generated — do not include it in the request body."
+            description = "Persists a new group with the provided name, optional description, member list, and optional family definitions. " +
+                          "The `groupId` is auto-generated — do not include it in the request body. " +
+                          "The `groupDescription` is stored but not returned in the response."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Group created successfully or creation failed",
@@ -98,7 +100,7 @@ public interface GroupAdminApi {
     })
     ResponseStructure createGroup(
             @RequestBody(
-                    description = "Group details. `groupId` must not be included — it is auto-generated.",
+                    description = "Group details. `groupId` must not be included — it is auto-generated. `groupDescription` is optional (max 255 characters).",
                     required = true,
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Group.class),

@@ -65,7 +65,7 @@
 	</dependencies>
 
 	<build>
-		<finalName>authentication-svc</finalName>
+		<finalName>breakdown-dashboard-svc</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
