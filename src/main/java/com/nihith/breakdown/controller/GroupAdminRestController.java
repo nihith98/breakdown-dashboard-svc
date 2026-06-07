@@ -3,16 +3,19 @@ package com.nihith.breakdown.controller;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.nihith.breakdown.dashboard.service.GroupAdminService;
 import com.nihith.breakdown.doc.GroupAdminApi;
 import com.nihith.breakdown.model.groups.Group;
+import com.nihith.breakdown.model.groups.JoinGroupRequest;
 import com.nihith.breakdown.model.response.ResponseStructure;
 
 /**
@@ -37,6 +40,9 @@ public class GroupAdminRestController implements GroupAdminApi {
     @PostMapping("/create")
     public ResponseStructure createGroup(@Validated @RequestBody Group request) {
         logger.info("Entered createGroup");
+        if (request.getGroupName() == null || request.getGroupName().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "groupName is required");
+        }
         return groupAdminService.createGroup(request);
     }
 
@@ -46,7 +52,7 @@ public class GroupAdminRestController implements GroupAdminApi {
      */
     @Override
     @PostMapping("/{groupId}/add-members")
-    public ResponseStructure addMembers(@PathVariable String groupId, @Validated @RequestBody Group request) {
+    public ResponseStructure addMembers(@PathVariable String groupId, @RequestBody Group request) {
         logger.info("Entered addMembers");
         return groupAdminService.addMembers(groupId, request);
     }
@@ -60,9 +66,20 @@ public class GroupAdminRestController implements GroupAdminApi {
      */
     @Override
     @PostMapping("/{groupId}/manage-families")
-    public ResponseStructure manageFamilies(@PathVariable String groupId, @Validated @RequestBody Group request) {
+    public ResponseStructure manageFamilies(@PathVariable String groupId, @RequestBody Group request) {
         logger.info("Entered manageFamilies");
         return groupAdminService.manageFamilies(groupId, request);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>Delegates to {@link GroupAdminService#joinGroupByCode(JoinGroupRequest)} to add the user to the group.</p>
+     */
+    @Override
+    @PostMapping("/join")
+    public ResponseStructure joinGroupByCode(@Validated @RequestBody JoinGroupRequest request) {
+        logger.info("Entered joinGroupByCode");
+        return groupAdminService.joinGroupByCode(request);
     }
 
 }

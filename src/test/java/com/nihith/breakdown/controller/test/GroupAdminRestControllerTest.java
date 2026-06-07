@@ -5,6 +5,7 @@ import com.nihith.breakdown.controller.GroupAdminRestController;
 import com.nihith.breakdown.dashboard.service.GroupAdminService;
 import com.nihith.breakdown.model.groups.Family;
 import com.nihith.breakdown.model.groups.Group;
+import com.nihith.breakdown.model.groups.JoinGroupRequest;
 import com.nihith.breakdown.model.response.MessageType;
 import com.nihith.breakdown.model.response.ResponseMessages;
 import com.nihith.breakdown.model.response.ResponseStatus;
@@ -425,5 +426,93 @@ public class GroupAdminRestControllerTest {
                 .andExpect(jsonPath("$.messages.informationMessages[0]").value("Families Updated Successfully"));
 
         verify(groupAdminService, times(1)).manageFamilies(eq(groupId), any(Group.class));
+    }
+
+    @Test
+    void joinGroupByCode_ValidCode_ReturnsSuccess() throws Exception {
+        // Arrange
+        JoinGroupRequest joinRequest = new JoinGroupRequest();
+        joinRequest.setJoiningCode("c24aad90-25bc-43f8-bade-637c8c775024");
+
+        ResponseStructure responseStructure = new ResponseStructure();
+        responseStructure.setStatus(ResponseStatus.SUCCESS);
+        ResponseMessages messages = new ResponseMessages();
+        List<String> infoMessages = new ArrayList<>();
+        infoMessages.add("Joined group successfully");
+        messages.setInformationMessages(infoMessages);
+        responseStructure.setMessages(messages);
+        responseStructure.setPayload(null);
+
+        when(groupAdminService.joinGroupByCode(any(JoinGroupRequest.class))).thenReturn(responseStructure);
+
+        // Act & Assert
+        mockMvc.perform(post("/admin/group/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\n" +
+                                "  \"joiningCode\": \"c24aad90-25bc-43f8-bade-637c8c775024\"\n" +
+                                "}"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.messages.informationMessages[0]").value("Joined group successfully"));
+
+        verify(groupAdminService, times(1)).joinGroupByCode(any(JoinGroupRequest.class));
+    }
+
+    @Test
+    void joinGroupByCode_InvalidCode_ReturnsFailure() throws Exception {
+        // Arrange
+        JoinGroupRequest joinRequest = new JoinGroupRequest();
+        joinRequest.setJoiningCode("invalid-code");
+
+        ResponseStructure responseStructure = new ResponseStructure();
+        responseStructure.setStatus(ResponseStatus.FAILURE);
+        ResponseMessages messages = new ResponseMessages();
+        List<String> errorMessages = new ArrayList<>();
+        errorMessages.add("Failed to join group");
+        messages.setErrorMessages(errorMessages);
+        responseStructure.setMessages(messages);
+        responseStructure.setPayload(null);
+
+        when(groupAdminService.joinGroupByCode(any(JoinGroupRequest.class))).thenReturn(responseStructure);
+
+        // Act & Assert
+        mockMvc.perform(post("/admin/group/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\n" +
+                                "  \"joiningCode\": \"invalid-code\"\n" +
+                                "}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.messages.errorMessages[0]").value("Failed to join group"));
+
+        verify(groupAdminService, times(1)).joinGroupByCode(any(JoinGroupRequest.class));
+    }
+
+    @Test
+    void joinGroupByCode_AlreadyMember_ReturnsFailure() throws Exception {
+        // Arrange
+        JoinGroupRequest joinRequest = new JoinGroupRequest();
+        joinRequest.setJoiningCode("c24aad90-25bc-43f8-bade-637c8c775024");
+
+        ResponseStructure responseStructure = new ResponseStructure();
+        responseStructure.setStatus(ResponseStatus.FAILURE);
+        ResponseMessages messages = new ResponseMessages();
+        List<String> errorMessages = new ArrayList<>();
+        errorMessages.add("Failed to join group");
+        messages.setErrorMessages(errorMessages);
+        responseStructure.setMessages(messages);
+        responseStructure.setPayload(null);
+
+        when(groupAdminService.joinGroupByCode(any(JoinGroupRequest.class))).thenReturn(responseStructure);
+
+        // Act & Assert
+        mockMvc.perform(post("/admin/group/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\n" +
+                                "  \"joiningCode\": \"c24aad90-25bc-43f8-bade-637c8c775024\"\n" +
+                                "}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.messages.errorMessages[0]").value("Failed to join group"));
+
+        verify(groupAdminService, times(1)).joinGroupByCode(any(JoinGroupRequest.class));
     }
 }

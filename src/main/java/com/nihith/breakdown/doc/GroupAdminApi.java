@@ -1,6 +1,7 @@
 package com.nihith.breakdown.doc;
 
 import com.nihith.breakdown.model.groups.Group;
+import com.nihith.breakdown.model.groups.JoinGroupRequest;
 import com.nihith.breakdown.model.response.ResponseStructure;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -26,8 +27,8 @@ public interface GroupAdminApi {
     // ── Example constants ─────────────────────────────────────────────────────
 
     String EXAMPLE_CREATE_SUCCESS =
-            "{\"data\":{\"groupId\":\"a3f1c2d4-5e6f-7890-abcd-ef1234567890\",\"groupName\":\"Trip 2025\"," +
-            "\"personList\":[\"alice\",\"bob\",\"carol\"],\"familyList\":[]}," +
+            "{\"data\":{\"groupId\":\"54d95102-4bde-496a-aaca-9460b1fd56e5\",\"joiningCode\":\"e5f4a8f8-faee-4d92-bd3f-77302f48dafa\",\"groupName\":\"Trip 2025\"," +
+            "\"personList\":[\"196b6b05-6e18-47b6-b3d9-a165b81e6784\"],\"familyList\":null,\"groupDescription\":\"Summer vacation expenses\"}," +
             "\"responseStatus\":\"SUCCESS\",\"messages\":[{\"messageType\":\"INFORMATION\"," +
             "\"message\":\"Group created successfully\"}]}";
 
@@ -72,22 +73,35 @@ public interface GroupAdminApi {
             "{\"timestamp\":\"2026-03-29T10:00:00.000+00:00\",\"status\":400,\"error\":\"Bad Request\"," +
             "\"message\":\"Person alice is already a member of family fam-001\"}";
 
+    String EXAMPLE_JOIN_GROUP_SUCCESS =
+            "{\"data\":null,\"responseStatus\":\"SUCCESS\",\"messages\":[{\"messageType\":\"INFORMATION\"," +
+            "\"message\":\"Joined group successfully\"}]}";
+
+    String EXAMPLE_JOIN_GROUP_FAILURE =
+            "{\"data\":null,\"responseStatus\":\"FAILURE\"," +
+            "\"messages\":[{\"messageType\":\"ERROR\",\"message\":\"Failed to join group\"}]}";
+
+    String EXAMPLE_JOIN_GROUP_REQUEST =
+            "{\"joiningCode\":\"c24aad90-25bc-43f8-bade-637c8c775024\"}";
+
     // ── Endpoint contracts ────────────────────────────────────────────────────
 
     /**
      * Creates a new expense group and persists it in the database.
-     * A unique {@code groupId} is generated server-side; any {@code groupId} supplied
-     * in the request body is ignored.
-     * The {@code groupDescription} field is optional and persisted but not returned in the response.
+     * A unique {@code groupId} and {@code joiningCode} are generated server-side; any {@code groupId} supplied
+     * in the request body is ignored. The {@code joiningCode} is returned in the response and can be used
+     * by other users to join the group.
+     * The {@code groupDescription} field is optional and persisted.
      *
      * @param request the group details to persist
-     * @return a {@link ResponseStructure} indicating success or failure
+     * @return a {@link ResponseStructure} indicating success or failure, with the created group in the payload
      */
     @Operation(
             summary = "Create a new expense group",
             description = "Persists a new group with the provided name, optional description, member list, and optional family definitions. " +
-                          "The `groupId` is auto-generated — do not include it in the request body. " +
-                          "The `groupDescription` is stored but not returned in the response."
+                          "Both `groupId` and `joiningCode` are auto-generated server-side — do not include them in the request body. " +
+                          "The `joiningCode` can be shared with other users to allow them to join the group. " +
+                          "The created group object is returned in the response payload."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Group created successfully or creation failed",
@@ -195,5 +209,37 @@ public interface GroupAdminApi {
                             examples = @ExampleObject(name = "example", summary = "Mixed create/update/delete",
                                     value = EXAMPLE_MANAGE_FAMILIES_REQUEST)))
             Group request);
+
+    /**
+     * Joins a user to an existing expense group using the group's joining code.
+     * The user ID is automatically extracted from the X-User-Id request header.
+     * The user is added to the group's member list; if the user is already a member, the operation fails.
+     *
+     * @param request a {@link JoinGroupRequest} containing the joining code of the group to join
+     * @return a {@link ResponseStructure} indicating success or failure
+     */
+    @Operation(
+            summary = "Join an expense group using a joining code",
+            description = "Adds the authenticated user (identified by X-User-Id header) to the specified group. " +
+                          "The joining code is shared by group members to allow others to join. " +
+                          "**Validation failure (via server exception):** joining code does not exist, or user is already a member of the group."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User joined group successfully or operation failed",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ResponseStructure.class),
+                            examples = {
+                                    @ExampleObject(name = "success", summary = "User joined", value = EXAMPLE_JOIN_GROUP_SUCCESS),
+                                    @ExampleObject(name = "failure", summary = "Join failed", value = EXAMPLE_JOIN_GROUP_FAILURE)
+                            }))
+    })
+    ResponseStructure joinGroupByCode(
+            @RequestBody(
+                    description = "Joining code to identify the group to join.",
+                    required = true,
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = JoinGroupRequest.class),
+                            examples = @ExampleObject(name = "example", summary = "Valid joining code", value = EXAMPLE_JOIN_GROUP_REQUEST)))
+            JoinGroupRequest request);
 
 }
