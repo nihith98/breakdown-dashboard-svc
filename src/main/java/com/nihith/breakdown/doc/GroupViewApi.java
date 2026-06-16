@@ -116,6 +116,24 @@ public interface GroupViewApi {
             "\"paidForList\":[{\"paidForId\":\"bob\",\"paidForValue\":60.00}," +
             "{\"paidForId\":\"carol\",\"paidForValue\":40.00}],\"splitType\":\"PERCENTAGE\"}";
 
+    String EXAMPLE_UPDATE_SUCCESS =
+            "{\"data\":{\"groupId\":\"trip2025\",\"transactionList\":[{\"uuid\":\"abc-123\"," +
+            "\"transactionName\":\"Dinner (updated)\",\"transactionType\":\"EXPENSE\",\"amount\":9.00," +
+            "\"paidById\":\"alice\",\"paidForList\":[{\"paidForId\":\"alice\",\"paidForValue\":3.0}," +
+            "{\"paidForId\":\"bob\",\"paidForValue\":3.0},{\"paidForId\":\"carol\",\"paidForValue\":3.0}]," +
+            "\"splitType\":\"EQUAL\",\"groupId\":\"trip2025\",\"transactionStatus\":\"INCOMPLETE\"}]," +
+            "\"settlementList\":[]}," +
+            "\"responseStatus\":\"SUCCESS\",\"messages\":[{\"messageType\":\"INFORMATION\"," +
+            "\"message\":\"Successfully Updated Transaction\"}]}";
+
+    String EXAMPLE_GROUP_INFORMATION_SUCCESS =
+            "{\"data\":{\"groupId\":\"trip2025\",\"joiningCode\":\"c24aad90-25bc-43f8-bade-637c8c775024\"," +
+            "\"groupName\":\"Trip 2025\",\"groupDescription\":\"Summer vacation expenses\",\"createdById\":null," +
+            "\"personList\":[{\"userId\":\"alice\",\"displayName\":\"Alice\"},{\"userId\":\"bob\",\"displayName\":\"Bob\"}]," +
+            "\"familyList\":null}," +
+            "\"responseStatus\":\"SUCCESS\",\"messages\":[{\"messageType\":\"INFORMATION\"," +
+            "\"message\":\"Successfully Fetched Group Information\"}]}";
+
     // ── Endpoint contracts ────────────────────────────────────────────────────
 
     /**
@@ -267,4 +285,72 @@ public interface GroupViewApi {
                                     @ExampleObject(name = "percentage-split", summary = "PERCENTAGE — A pays $100; B=60%, C=40%", value = EXAMPLE_REQUEST_PERCENTAGE)
                             }))
             Transaction transaction);
+
+    /**
+     * Replaces an existing expense transaction for the specified group and triggers a recomputation
+     * of the settlement list, identical to {@link #insertTransaction(String, Transaction)}.
+     *
+     * @param groupId       the unique identifier of the expense group (taken from the URL path)
+     * @param transactionId the unique identifier of the transaction to update (taken from the URL path)
+     * @param transaction   the updated expense details; {@code groupId} and {@code uuid} are injected
+     *                      from the path and must not be relied upon from the request body
+     * @return a {@link ResponseStructure} containing the updated transaction and settlement
+     *         lists on success, or a failure response if the update fails
+     */
+    @Operation(
+            summary = "Update an existing expense in a group",
+            description = "Replaces the **EXPENSE** transaction identified by `transactionId` with the provided body. " +
+                          "On success the settlement list is recomputed and persisted, exactly as with insert.\n\n" +
+                          "`groupId` and `transactionId` are taken from the path."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Expense updated; settlement list recomputed",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ResponseStructure.class),
+                            examples = {
+                                    @ExampleObject(name = "success", summary = "Updated expense", value = EXAMPLE_UPDATE_SUCCESS),
+                                    @ExampleObject(name = "failure", summary = "Transaction could not be updated", value = EXAMPLE_FAILURE)
+                            })),
+            @ApiResponse(responseCode = "400", description = "Validation failure — required fields missing or constraints violated",
+                    content = @Content(mediaType = "application/json",
+                            examples = @ExampleObject(name = "validation-error", summary = "Missing transactionName or amount", value = EXAMPLE_VALIDATION_ERROR)))
+    })
+    ResponseStructure updateTransaction(
+            @Parameter(description = "Unique identifier of the expense group", example = "trip2025", required = true)
+            String groupId,
+            @Parameter(description = "Unique identifier of the transaction to update", example = "abc-123", required = true)
+            String transactionId,
+            @RequestBody(
+                    description = "Updated expense details.",
+                    required = true,
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Transaction.class),
+                            examples = @ExampleObject(name = "equal-split", summary = "EQUAL — updated amount and split", value = EXAMPLE_REQUEST_EQUAL)))
+            Transaction transaction);
+
+    /**
+     * Retrieves the group's metadata, resolved member list (with display names), and family
+     * definitions.
+     *
+     * @param groupId the unique identifier of the expense group
+     * @return a {@link ResponseStructure} containing the group information on success,
+     *         or a failure response if the group is not found or retrieval fails
+     */
+    @Operation(
+            summary = "Get full group information",
+            description = "Returns the group's metadata along with a resolved member list (`personList`, each entry " +
+                          "carrying `userId` and `displayName`) and the group's `familyList`."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Group information retrieved successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ResponseStructure.class),
+                            examples = {
+                                    @ExampleObject(name = "success", summary = "Group information", value = EXAMPLE_GROUP_INFORMATION_SUCCESS),
+                                    @ExampleObject(name = "failure", summary = "Group not found", value = EXAMPLE_FAILURE)
+                            }))
+    })
+    ResponseStructure fetchGroupInformation(
+            @Parameter(description = "Unique identifier of the expense group", example = "trip2025", required = true)
+            String groupId);
 }

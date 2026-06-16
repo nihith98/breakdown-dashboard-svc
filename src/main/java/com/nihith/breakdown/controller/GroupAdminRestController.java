@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -80,6 +81,18 @@ public class GroupAdminRestController implements GroupAdminApi {
     public ResponseStructure joinGroupByCode(@Validated @RequestBody JoinGroupRequest request) {
         logger.info("Entered joinGroupByCode");
         return groupAdminService.joinGroupByCode(request);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>Delegates to {@link GroupAdminService#removeMember(String, String)} to remove the member
+     * from the group.</p>
+     */
+    @Override
+    @DeleteMapping("/{groupId}/remove-member/{userId}")
+    public ResponseStructure removeMember(@PathVariable String groupId, @PathVariable String userId) {
+        logger.info("Entered removeMember");
+        return groupAdminService.removeMember(groupId, userId);
     }
 
 }

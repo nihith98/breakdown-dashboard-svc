@@ -67,4 +67,32 @@ public class GroupViewRestController implements GroupViewApi {
         return groupViewService.insertTransaction(transaction);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>Sets the {@code groupId} on the transaction from the path variable, then delegates
+     * to {@link GroupViewService#updateTransaction(String, Transaction)} to replace the existing
+     * expense and recompute the settlement list.</p>
+     */
+    @Override
+    @PutMapping("/{groupId}/update-transaction/{transactionId}")
+    public ResponseStructure updateTransaction(@PathVariable String groupId,
+                                               @PathVariable String transactionId,
+                                               @Validated @RequestBody Transaction transaction) {
+        logger.info("Entered updateTransaction");
+        transaction.setGroupId(groupId);
+        return groupViewService.updateTransaction(transactionId, transaction);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>Delegates to {@link GroupViewService#getGroupInformation(String)} to retrieve the
+     * group's metadata, resolved member list, and family definitions.</p>
+     */
+    @Override
+    @GetMapping("/{groupId}/group-information")
+    public ResponseStructure fetchGroupInformation(@PathVariable String groupId) {
+        logger.info("Entered fetchGroupInformation");
+        return groupViewService.getGroupInformation(groupId);
+    }
+
 }

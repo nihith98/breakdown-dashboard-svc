@@ -84,6 +84,14 @@ public interface GroupAdminApi {
     String EXAMPLE_JOIN_GROUP_REQUEST =
             "{\"joiningCode\":\"c24aad90-25bc-43f8-bade-637c8c775024\"}";
 
+    String EXAMPLE_REMOVE_MEMBER_SUCCESS =
+            "{\"data\":null,\"responseStatus\":\"SUCCESS\",\"messages\":[{\"messageType\":\"INFORMATION\"," +
+            "\"message\":\"Member Removed Successfully\"}]}";
+
+    String EXAMPLE_REMOVE_MEMBER_FAILURE =
+            "{\"data\":null,\"responseStatus\":\"FAILURE\"," +
+            "\"messages\":[{\"messageType\":\"ERROR\",\"message\":\"Failed to Remove Member\"}]}";
+
     // ── Endpoint contracts ────────────────────────────────────────────────────
 
     /**
@@ -241,5 +249,33 @@ public interface GroupAdminApi {
                             schema = @Schema(implementation = JoinGroupRequest.class),
                             examples = @ExampleObject(name = "example", summary = "Valid joining code", value = EXAMPLE_JOIN_GROUP_REQUEST)))
             JoinGroupRequest request);
+
+    /**
+     * Removes a member from an existing group. The member is also removed from any family's
+     * {@code personIds} list it belongs to.
+     *
+     * @param groupId the unique identifier of the group to update
+     * @param userId  the unique identifier of the user to remove
+     * @return a {@link ResponseStructure} indicating success or failure
+     */
+    @Operation(
+            summary = "Remove a member from a group",
+            description = "Removes the specified user from the group's `personList`, and from the `personIds` list " +
+                          "of any family they belong to."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Member removed successfully or operation failed",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ResponseStructure.class),
+                            examples = {
+                                    @ExampleObject(name = "success", summary = "Member removed", value = EXAMPLE_REMOVE_MEMBER_SUCCESS),
+                                    @ExampleObject(name = "failure", summary = "Operation failed", value = EXAMPLE_REMOVE_MEMBER_FAILURE)
+                            }))
+    })
+    ResponseStructure removeMember(
+            @Parameter(description = "Unique identifier of the group", example = "a3f1c2d4-5e6f-7890-abcd-ef1234567890", required = true)
+            String groupId,
+            @Parameter(description = "Unique identifier of the user to remove", example = "bob", required = true)
+            String userId);
 
 }
