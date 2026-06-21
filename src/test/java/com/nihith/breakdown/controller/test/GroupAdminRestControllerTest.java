@@ -3,9 +3,11 @@ package com.nihith.breakdown.controller.test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nihith.breakdown.controller.GroupAdminRestController;
 import com.nihith.breakdown.dashboard.service.GroupAdminService;
-import com.nihith.breakdown.model.groups.Family;
 import com.nihith.breakdown.model.groups.Group;
 import com.nihith.breakdown.model.groups.JoinGroupRequest;
+import com.nihith.breakdown.model.groups.ManageFamiliesRequest;
+import com.nihith.breakdown.model.groups.ManageFamilyEntry;
+import com.nihith.breakdown.model.groups.PersonEntry;
 import com.nihith.breakdown.model.response.MessageType;
 import com.nihith.breakdown.model.response.ResponseMessages;
 import com.nihith.breakdown.model.response.ResponseStatus;
@@ -215,13 +217,15 @@ public class GroupAdminRestControllerTest {
     void manageFamilies_CreateNewFamily_ReturnsSuccess() throws Exception {
         // Arrange
         String groupId = "a3f1c2d4-5e6f-7890-abcd-ef1234567890";
-        Group manageFamiliesRequest = new Group();
-        List<Family> familyList = new ArrayList<>();
-        Family newFamily = new Family();
+        ManageFamiliesRequest manageFamiliesRequest = new ManageFamiliesRequest();
+        List<ManageFamilyEntry> familyList = new ArrayList<>();
+        ManageFamilyEntry newFamily = new ManageFamilyEntry();
         newFamily.setFamilyName("Trip Crew");
-        List<String> personIds = new ArrayList<>();
-        personIds.add("alice");
-        personIds.add("bob");
+        newFamily.setFamilyHex("#5B9BD5");
+        List<PersonEntry> personIds = new ArrayList<>();
+        PersonEntry alice = new PersonEntry(); alice.setPersonId("alice"); alice.setDisplayName("Alice");
+        PersonEntry bob = new PersonEntry(); bob.setPersonId("bob"); bob.setDisplayName("Bob");
+        personIds.add(alice); personIds.add(bob);
         newFamily.setPersonIds(personIds);
         familyList.add(newFamily);
         manageFamiliesRequest.setFamilyList(familyList);
@@ -235,34 +239,34 @@ public class GroupAdminRestControllerTest {
         responseStructure.setMessages(messages);
         responseStructure.setPayload(null);
 
-        when(groupAdminService.manageFamilies(eq(groupId), any(Group.class))).thenReturn(responseStructure);
+        when(groupAdminService.manageFamilies(eq(groupId), any(ManageFamiliesRequest.class))).thenReturn(responseStructure);
 
         // Act & Assert
         mockMvc.perform(post("/admin/group/{groupId}/manage-families", groupId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\n" +
-                                "  \"familyList\": [\n" +
-                                "    {\"familyName\": \"Trip Crew\", \"personIds\": [\"alice\", \"bob\"]}\n" +
-                                "  ]\n" +
-                                "}"))
+                        .content("{\"familyList\":[{\"familyName\":\"Trip Crew\",\"familyHex\":\"#5B9BD5\"," +
+                                "\"personIds\":[{\"personId\":\"alice\",\"displayName\":\"Alice\"},{\"personId\":\"bob\",\"displayName\":\"Bob\"}]}]}"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.messages.informationMessages[0]").value("Families Updated Successfully"));
 
-        verify(groupAdminService, times(1)).manageFamilies(eq(groupId), any(Group.class));
+        verify(groupAdminService, times(1)).manageFamilies(eq(groupId), any(ManageFamiliesRequest.class));
     }
 
     @Test
     void manageFamilies_UpdateExistingFamily_ReturnsSuccess() throws Exception {
         // Arrange
         String groupId = "a3f1c2d4-5e6f-7890-abcd-ef1234567890";
-        Group manageFamiliesRequest = new Group();
-        List<Family> familyList = new ArrayList<>();
-        Family existingFamily = new Family();
+        ManageFamiliesRequest manageFamiliesRequest = new ManageFamiliesRequest();
+        List<ManageFamilyEntry> familyList = new ArrayList<>();
+        ManageFamilyEntry existingFamily = new ManageFamilyEntry();
         existingFamily.setFamilyId("fam-001");
-        List<String> personIds = new ArrayList<>();
-        personIds.add("carol");
-        personIds.add("dave");
+        existingFamily.setFamilyName("Home Team");
+        existingFamily.setFamilyHex("#4CAF7D");
+        List<PersonEntry> personIds = new ArrayList<>();
+        PersonEntry carol = new PersonEntry(); carol.setPersonId("carol"); carol.setDisplayName("Carol");
+        PersonEntry dave = new PersonEntry(); dave.setPersonId("dave"); dave.setDisplayName("Dave");
+        personIds.add(carol); personIds.add(dave);
         existingFamily.setPersonIds(personIds);
         familyList.add(existingFamily);
         manageFamiliesRequest.setFamilyList(familyList);
@@ -276,31 +280,28 @@ public class GroupAdminRestControllerTest {
         responseStructure.setMessages(messages);
         responseStructure.setPayload(null);
 
-        when(groupAdminService.manageFamilies(eq(groupId), any(Group.class))).thenReturn(responseStructure);
+        when(groupAdminService.manageFamilies(eq(groupId), any(ManageFamiliesRequest.class))).thenReturn(responseStructure);
 
         // Act & Assert
         mockMvc.perform(post("/admin/group/{groupId}/manage-families", groupId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\n" +
-                                "  \"familyList\": [\n" +
-                                "    {\"familyId\": \"fam-001\", \"personIds\": [\"carol\", \"dave\"]}\n" +
-                                "  ]\n" +
-                                "}"))
+                        .content("{\"familyList\":[{\"familyId\":\"fam-001\",\"familyName\":\"Home Team\",\"familyHex\":\"#4CAF7D\"," +
+                                "\"personIds\":[{\"personId\":\"carol\",\"displayName\":\"Carol\"},{\"personId\":\"dave\",\"displayName\":\"Dave\"}]}]}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.messages.informationMessages[0]").value("Families Updated Successfully"));
 
-        verify(groupAdminService, times(1)).manageFamilies(eq(groupId), any(Group.class));
+        verify(groupAdminService, times(1)).manageFamilies(eq(groupId), any(ManageFamiliesRequest.class));
     }
 
     @Test
     void manageFamilies_DeleteFamily_ReturnsSuccess() throws Exception {
         // Arrange
         String groupId = "a3f1c2d4-5e6f-7890-abcd-ef1234567890";
-        Group manageFamiliesRequest = new Group();
-        List<Family> familyList = new ArrayList<>();
-        Family familyToDelete = new Family();
+        ManageFamiliesRequest manageFamiliesRequest = new ManageFamiliesRequest();
+        List<ManageFamilyEntry> familyList = new ArrayList<>();
+        ManageFamilyEntry familyToDelete = new ManageFamilyEntry();
         familyToDelete.setFamilyId("fam-002");
-        familyToDelete.setPersonIds(new ArrayList<>()); // Empty personIds indicates delete
+        familyToDelete.setPersonIds(new ArrayList<>());
         familyList.add(familyToDelete);
         manageFamiliesRequest.setFamilyList(familyList);
 
@@ -313,32 +314,30 @@ public class GroupAdminRestControllerTest {
         responseStructure.setMessages(messages);
         responseStructure.setPayload(null);
 
-        when(groupAdminService.manageFamilies(eq(groupId), any(Group.class))).thenReturn(responseStructure);
+        when(groupAdminService.manageFamilies(eq(groupId), any(ManageFamiliesRequest.class))).thenReturn(responseStructure);
 
         // Act & Assert
         mockMvc.perform(post("/admin/group/{groupId}/manage-families", groupId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\n" +
-                                "  \"familyList\": [\n" +
-                                "    {\"familyId\": \"fam-002\", \"personIds\": []}\n" +
-                                "  ]\n" +
-                                "}"))
+                        .content("{\"familyList\":[{\"familyId\":\"fam-002\",\"personIds\":[]}]}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.messages.informationMessages[0]").value("Families Updated Successfully"));
 
-        verify(groupAdminService, times(1)).manageFamilies(eq(groupId), any(Group.class));
+        verify(groupAdminService, times(1)).manageFamilies(eq(groupId), any(ManageFamiliesRequest.class));
     }
 
     @Test
     void manageFamilies_InvalidPerson_ReturnsFailure() throws Exception {
         // Arrange
         String groupId = "a3f1c2d4-5e6f-7890-abcd-ef1234567890";
-        Group manageFamiliesRequest = new Group();
-        List<Family> familyList = new ArrayList<>();
-        Family newFamily = new Family();
+        ManageFamiliesRequest manageFamiliesRequest = new ManageFamiliesRequest();
+        List<ManageFamilyEntry> familyList = new ArrayList<>();
+        ManageFamilyEntry newFamily = new ManageFamilyEntry();
         newFamily.setFamilyName("New Family");
-        List<String> personIds = new ArrayList<>();
-        personIds.add("invalid-person");
+        newFamily.setFamilyHex("#E07B54");
+        List<PersonEntry> personIds = new ArrayList<>();
+        PersonEntry invalid = new PersonEntry(); invalid.setPersonId("invalid-person"); invalid.setDisplayName("Unknown");
+        personIds.add(invalid);
         newFamily.setPersonIds(personIds);
         familyList.add(newFamily);
         manageFamiliesRequest.setFamilyList(familyList);
@@ -352,49 +351,51 @@ public class GroupAdminRestControllerTest {
         responseStructure.setMessages(messages);
         responseStructure.setPayload(null);
 
-        when(groupAdminService.manageFamilies(eq(groupId), any(Group.class))).thenReturn(responseStructure);
+        when(groupAdminService.manageFamilies(eq(groupId), any(ManageFamiliesRequest.class))).thenReturn(responseStructure);
 
         // Act & Assert
         mockMvc.perform(post("/admin/group/{groupId}/manage-families", groupId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\n" +
-                                "  \"familyList\": [\n" +
-                                "    {\"familyName\": \"New Family\", \"personIds\": [\"invalid-person\"]}\n" +
-                                "  ]\n" +
-                                "}"))
+                        .content("{\"familyList\":[{\"familyName\":\"New Family\",\"familyHex\":\"#E07B54\"," +
+                                "\"personIds\":[{\"personId\":\"invalid-person\",\"displayName\":\"Unknown\"}]}]}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.messages.errorMessages[0]").value("Person invalid-person is not a member of the group"));
 
-        verify(groupAdminService, times(1)).manageFamilies(eq(groupId), any(Group.class));
+        verify(groupAdminService, times(1)).manageFamilies(eq(groupId), any(ManageFamiliesRequest.class));
     }
 
     @Test
     void manageFamilies_MixedCreateUpdateDelete_ReturnsSuccess() throws Exception {
         // Arrange
         String groupId = "a3f1c2d4-5e6f-7890-abcd-ef1234567890";
-        Group manageFamiliesRequest = new Group();
-        List<Family> familyList = new ArrayList<>();
+        ManageFamiliesRequest manageFamiliesRequest = new ManageFamiliesRequest();
+        List<ManageFamilyEntry> familyList = new ArrayList<>();
 
         // Create
-        Family newFamily = new Family();
+        ManageFamilyEntry newFamily = new ManageFamilyEntry();
         newFamily.setFamilyName("Trip Crew");
-        List<String> personIds1 = new ArrayList<>();
-        personIds1.add("alice");
-        personIds1.add("bob");
+        newFamily.setFamilyHex("#5B9BD5");
+        List<PersonEntry> personIds1 = new ArrayList<>();
+        PersonEntry alice = new PersonEntry(); alice.setPersonId("alice"); alice.setDisplayName("Alice");
+        PersonEntry bob = new PersonEntry(); bob.setPersonId("bob"); bob.setDisplayName("Bob");
+        personIds1.add(alice); personIds1.add(bob);
         newFamily.setPersonIds(personIds1);
         familyList.add(newFamily);
 
         // Update
-        Family existingFamily = new Family();
+        ManageFamilyEntry existingFamily = new ManageFamilyEntry();
         existingFamily.setFamilyId("fam-001");
-        List<String> personIds2 = new ArrayList<>();
-        personIds2.add("carol");
-        personIds2.add("dave");
+        existingFamily.setFamilyName("Home Team");
+        existingFamily.setFamilyHex("#4CAF7D");
+        List<PersonEntry> personIds2 = new ArrayList<>();
+        PersonEntry carol = new PersonEntry(); carol.setPersonId("carol"); carol.setDisplayName("Carol");
+        PersonEntry dave = new PersonEntry(); dave.setPersonId("dave"); dave.setDisplayName("Dave");
+        personIds2.add(carol); personIds2.add(dave);
         existingFamily.setPersonIds(personIds2);
         familyList.add(existingFamily);
 
         // Delete
-        Family familyToDelete = new Family();
+        ManageFamilyEntry familyToDelete = new ManageFamilyEntry();
         familyToDelete.setFamilyId("fam-002");
         familyToDelete.setPersonIds(new ArrayList<>());
         familyList.add(familyToDelete);
@@ -410,22 +411,20 @@ public class GroupAdminRestControllerTest {
         responseStructure.setMessages(messages);
         responseStructure.setPayload(null);
 
-        when(groupAdminService.manageFamilies(eq(groupId), any(Group.class))).thenReturn(responseStructure);
+        when(groupAdminService.manageFamilies(eq(groupId), any(ManageFamiliesRequest.class))).thenReturn(responseStructure);
 
         // Act & Assert
         mockMvc.perform(post("/admin/group/{groupId}/manage-families", groupId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\n" +
-                                "  \"familyList\": [\n" +
-                                "    {\"familyName\": \"Trip Crew\", \"personIds\": [\"alice\", \"bob\"]},\n" +
-                                "    {\"familyId\": \"fam-001\", \"personIds\": [\"carol\", \"dave\"]},\n" +
-                                "    {\"familyId\": \"fam-002\", \"personIds\": []}\n" +
-                                "  ]\n" +
-                                "}"))
+                        .content("{\"familyList\":[" +
+                                "{\"familyName\":\"Trip Crew\",\"familyHex\":\"#5B9BD5\",\"personIds\":[{\"personId\":\"alice\",\"displayName\":\"Alice\"},{\"personId\":\"bob\",\"displayName\":\"Bob\"}]}," +
+                                "{\"familyId\":\"fam-001\",\"familyName\":\"Home Team\",\"familyHex\":\"#4CAF7D\",\"personIds\":[{\"personId\":\"carol\",\"displayName\":\"Carol\"},{\"personId\":\"dave\",\"displayName\":\"Dave\"}]}," +
+                                "{\"familyId\":\"fam-002\",\"personIds\":[]}" +
+                                "]}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.messages.informationMessages[0]").value("Families Updated Successfully"));
 
-        verify(groupAdminService, times(1)).manageFamilies(eq(groupId), any(Group.class));
+        verify(groupAdminService, times(1)).manageFamilies(eq(groupId), any(ManageFamiliesRequest.class));
     }
 
     @Test

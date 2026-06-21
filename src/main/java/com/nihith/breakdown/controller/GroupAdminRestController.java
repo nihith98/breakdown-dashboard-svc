@@ -17,6 +17,7 @@ import com.nihith.breakdown.dashboard.service.GroupAdminService;
 import com.nihith.breakdown.doc.GroupAdminApi;
 import com.nihith.breakdown.model.groups.Group;
 import com.nihith.breakdown.model.groups.JoinGroupRequest;
+import com.nihith.breakdown.model.groups.ManageFamiliesRequest;
 import com.nihith.breakdown.model.response.ResponseStructure;
 
 /**
@@ -67,7 +68,7 @@ public class GroupAdminRestController implements GroupAdminApi {
      */
     @Override
     @PostMapping("/{groupId}/manage-families")
-    public ResponseStructure manageFamilies(@PathVariable String groupId, @RequestBody Group request) {
+    public ResponseStructure manageFamilies(@PathVariable String groupId, @RequestBody ManageFamiliesRequest request) {
         logger.info("Entered manageFamilies");
         return groupAdminService.manageFamilies(groupId, request);
     }

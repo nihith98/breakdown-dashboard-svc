@@ -95,4 +95,17 @@ public class GroupViewRestController implements GroupViewApi {
         return groupViewService.getGroupInformation(groupId);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>Delegates to {@link GroupViewService#deleteTransaction(String, String)} to remove
+     * the transaction and recompute the settlement list.</p>
+     */
+    @Override
+    @DeleteMapping("/{groupId}/delete-transaction/{transactionId}")
+    public ResponseStructure deleteTransaction(@PathVariable String groupId,
+                                               @PathVariable String transactionId) {
+        logger.info("Entered deleteTransaction");
+        return groupViewService.deleteTransaction(groupId, transactionId);
+    }
+
 }

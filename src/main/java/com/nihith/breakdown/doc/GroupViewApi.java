@@ -83,6 +83,11 @@ public interface GroupViewApi {
             "\"responseStatus\":\"SUCCESS\",\"messages\":[{\"messageType\":\"INFORMATION\"," +
             "\"message\":\"Transaction inserted successfully\"}]}";
 
+    String EXAMPLE_DELETE_SUCCESS =
+            "{\"data\":{\"groupId\":\"trip2025\",\"transactionList\":[],\"settlementList\":[]}," +
+            "\"responseStatus\":\"SUCCESS\",\"messages\":[{\"messageType\":\"INFORMATION\"," +
+            "\"message\":\"Successfully Deleted Transaction\"}]}";
+
     String EXAMPLE_FAILURE =
             "{\"data\":null,\"responseStatus\":\"FAILURE\"," +
             "\"messages\":[{\"messageType\":\"ERROR\",\"message\":\"Operation failed\"}]}";
@@ -353,4 +358,31 @@ public interface GroupViewApi {
     ResponseStructure fetchGroupInformation(
             @Parameter(description = "Unique identifier of the expense group", example = "trip2025", required = true)
             String groupId);
+
+    /**
+     * Deletes the transaction identified by {@code transactionId} and recomputes the settlement list.
+     *
+     * @param groupId       the unique identifier of the expense group
+     * @param transactionId the unique identifier of the transaction to delete
+     * @return a {@link ResponseStructure} containing the updated transaction and settlement lists on success
+     */
+    @Operation(
+            summary = "Delete a transaction from a group",
+            description = "Deletes the **EXPENSE** or **SETTLEMENT** transaction identified by `transactionId`. " +
+                          "On success the settlement list is recomputed and the updated lists are returned."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Transaction deleted; settlement list recomputed",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ResponseStructure.class),
+                            examples = {
+                                    @ExampleObject(name = "success", summary = "Transaction deleted", value = EXAMPLE_DELETE_SUCCESS),
+                                    @ExampleObject(name = "failure", summary = "Transaction could not be deleted", value = EXAMPLE_FAILURE)
+                            }))
+    })
+    ResponseStructure deleteTransaction(
+            @Parameter(description = "Unique identifier of the expense group", example = "trip2025", required = true)
+            String groupId,
+            @Parameter(description = "Unique identifier of the transaction to delete", example = "abc-123", required = true)
+            String transactionId);
 }

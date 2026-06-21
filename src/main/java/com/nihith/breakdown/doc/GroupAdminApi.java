@@ -2,6 +2,7 @@ package com.nihith.breakdown.doc;
 
 import com.nihith.breakdown.model.groups.Group;
 import com.nihith.breakdown.model.groups.JoinGroupRequest;
+import com.nihith.breakdown.model.groups.ManageFamiliesRequest;
 import com.nihith.breakdown.model.response.ResponseStructure;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -56,9 +57,9 @@ public interface GroupAdminApi {
 
     String EXAMPLE_MANAGE_FAMILIES_REQUEST =
             "{\"familyList\":[" +
-            "{\"familyName\":\"Trip Crew\",\"personIds\":[\"alice\",\"bob\"]}" +
-            ",{\"familyId\":\"fam-001\",\"personIds\":[\"carol\",\"dave\"]}" +
-            ",{\"familyId\":\"fam-002\",\"personIds\":[]}" +
+            "{\"familyName\":\"Trip Crew\",\"familyHex\":\"#5B9BD5\",\"personIds\":[{\"personId\":\"alice\",\"displayName\":\"Alice\"},{\"personId\":\"bob\",\"displayName\":\"Bob\"}]}" +
+            ",{\"familyId\":\"fam-001\",\"familyName\":\"Home Team\",\"familyHex\":\"#4CAF7D\",\"personIds\":[{\"personId\":\"carol\",\"displayName\":\"Carol\"},{\"personId\":\"dave\",\"displayName\":\"Dave\"}]}" +
+            ",{\"familyId\":\"fam-002\",\"familyName\":\"Old Family\",\"familyHex\":\"#E07B54\",\"personIds\":[]}" +
             "]}";
 
     String EXAMPLE_MANAGE_FAMILIES_SUCCESS =
@@ -210,13 +211,13 @@ public interface GroupAdminApi {
             @Parameter(description = "Unique identifier of the group", example = "a3f1c2d4-5e6f-7890-abcd-ef1234567890", required = true)
             String groupId,
             @RequestBody(
-                    description = "Family operations. Omit `familyId` to create; include for update or delete.",
+                    description = "Family operations. Omit `familyId` to create; include for update or delete. `personIds` is an array of `{personId, displayName}` objects.",
                     required = true,
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = Group.class),
+                            schema = @Schema(implementation = ManageFamiliesRequest.class),
                             examples = @ExampleObject(name = "example", summary = "Mixed create/update/delete",
                                     value = EXAMPLE_MANAGE_FAMILIES_REQUEST)))
-            Group request);
+            ManageFamiliesRequest request);
 
     /**
      * Joins a user to an existing expense group using the group's joining code.
